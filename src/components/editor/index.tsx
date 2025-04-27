@@ -1,6 +1,6 @@
 "use client";
 
-import { CSSProperties } from "react";
+import { CSSProperties, useRef, useState } from "react";
 
 // ICONS
 import {
@@ -16,6 +16,8 @@ import {
   AlignLeft,
   Underline,
   Strikethrough,
+  Maximize,
+  Save,
 } from "lucide-react";
 
 // H1, H2, H3, H4, H5, H6, P, SPAN, SMALL
@@ -45,6 +47,25 @@ import {
 // Zoom
 // Indices
 // Salvar (PDF, DOCX)
+
+export type optionsType = {
+  name: string;
+  icon: any;
+  click: () => void;
+  code:
+    | "bold"
+    | "italic"
+    | "quote"
+    | "h"
+    | "link"
+    | "code"
+    | "blockCode"
+    | "list"
+    | "listOrdered"
+    | "align"
+    | "underline"
+    | "strikethrough";
+};
 export type styleType = {
   editor: CSSProperties;
   header: {
@@ -106,21 +127,40 @@ export type styleType = {
           item: CSSProperties;
         };
       };
+      help: {
+        zoom: {
+          style: CSSProperties;
+          item: CSSProperties;
+        };
+        save: {
+          style: CSSProperties;
+          item: CSSProperties;
+        };
+      };
     };
   };
+  body: {
+    style: CSSProperties;
+  };
 };
-export default function TextEditor() {
+export default function TextEditor({
+  onChange,
+}: {
+  onChange: (value: string) => void;
+}) {
+  const [selected, setSelected] = useState({ start: 0, end: 0 });
+  const bodyRef = useRef<HTMLDivElement>(null);
   const style: styleType = {
     editor: {
       borderRadius: "5px",
       backgroundColor: "#fff",
       width: "100%",
-      height: "400px",
     },
     header: {
       style: {
         borderBottom: "solid 1px #929292",
         display: "flex",
+        justifyContent: "space-between",
         padding: "3px",
       },
       item: {
@@ -262,97 +302,192 @@ export default function TextEditor() {
             },
           },
         },
+        help: {
+          zoom: {
+            style: {
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            },
+            item: {
+              height: "16px",
+            },
+          },
+          save: {
+            style: {
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            },
+            item: {
+              height: "16px",
+            },
+          },
+        },
+      },
+    },
+    body: {
+      style: {
+        height: "400px",
+        padding: "10px",
       },
     },
   };
 
-  const element: Array<{
-    name: string;
-    icon: any;
-    code:
-      | "bold"
-      | "italic"
-      | "quote"
-      | "h"
-      | "link"
-      | "code"
-      | "blockCode"
-      | "list"
-      | "listOrdered"
-      | "align"
-      | "underline"
-      | "strikethrough";
-  }> = [
+  const modifyText = (text: string, tagStart: string, tagEnd: string) => {
+    if (selected.start === selected.end) return false;
+    console.log(selected.start, selected.end);
+    const textBodyStart =
+      text.slice(0, selected.start) + tagStart + text.slice(selected.start);
+
+    const textBodyEnd =
+      textBodyStart.slice(0, selected.end + tagStart.length) +
+      tagEnd +
+      textBodyStart.slice(selected.end + tagStart.length);
+
+    setSelected({ start: 0, end: 0 });
+
+    return textBodyEnd;
+  };
+
+  const boldExec = () => {
+    if (bodyRef.current) {
+      const textBody = bodyRef.current?.innerHTML;
+      console.log(textBody);
+      const response = modifyText(textBody, "<strong>", "</strong>");
+      if (response) {
+        console.log(response);
+        bodyRef.current.innerHTML = response;
+        onChange(response);
+      }
+    }
+  };
+  const ItalicExec = () => {
+    if (bodyRef.current) {
+      const textBody = bodyRef.current?.innerHTML;
+      console.log(textBody);
+      const response = modifyText(textBody, "<i>", "</i>");
+      if (response) {
+        console.log(response);
+        bodyRef.current.innerHTML = response;
+        onChange(response);
+      }
+    }
+  };
+
+  const element: Array<optionsType> = [
     {
       name: "Fonte",
       icon: Heading,
       code: "h",
+      click: () => {},
     },
     {
       name: "Negrito",
       icon: Bold,
       code: "bold",
+      click: boldExec,
     },
     {
       name: "Italico",
       icon: Italic,
       code: "italic",
+      click: ItalicExec,
     },
     {
       name: "Aspas",
       icon: Quote,
       code: "quote",
+      click: () => {},
     },
     {
       name: "Link",
       icon: Link,
       code: "link",
+      click: () => {},
     },
     {
       name: "Código",
       icon: Code,
       code: "code",
+      click: () => {},
     },
     {
       name: "Bloco de código",
       icon: Braces,
       code: "blockCode",
+      click: () => {},
     },
     {
       name: "Lista pontilhada",
       icon: List,
       code: "list",
+      click: () => {},
     },
     {
       name: "Lista ordenada",
       icon: ListOrdered,
       code: "listOrdered",
+      click: () => {},
     },
     {
       name: "Alinhamento",
       icon: AlignLeft,
       code: "align",
+      click: () => {},
     },
     {
       name: "Sublinhado",
       icon: Underline,
       code: "underline",
+      click: () => {},
     },
     {
       name: "Riscado",
       icon: Strikethrough,
       code: "strikethrough",
+      click: () => {},
     },
   ];
+
+  const handleBody = () => {
+    if (bodyRef.current) {
+      console.log(bodyRef.current.innerText);
+      onChange(bodyRef.current.innerText);
+    }
+  };
+
+  const checkSelection = () => {
+    console.log("test");
+  };
+
   return (
     <div style={style.editor}>
-      <ul style={style.header.style}>
-        {element.map((Item, index) => (
+      <div style={style.header.style}>
+        <ul className="flex">
+          {element.map((Item, index) => (
+            <li
+              key={index}
+              style={{
+                ...style.header.item.style,
+                ...style.header.item.elements[Item.code].style,
+                ...(style.header.item.events?.hover?.backgroundColor && {
+                  "--hover-bg-color":
+                    style.header.item.events.hover.backgroundColor,
+                }),
+              }}
+              onClick={Item.click}
+              className="hover:bg-[var(--hover-bg-color)]"
+            >
+              <Item.icon style={style.header.item.elements[Item.code].item} />
+            </li>
+          ))}
+        </ul>
+        <ul className="flex">
           <li
-            key={index}
             style={{
               ...style.header.item.style,
-              ...style.header.item.elements[Item.code].style,
+              ...style.header.item.help.zoom.style,
               ...(style.header.item.events?.hover?.backgroundColor && {
                 "--hover-bg-color":
                   style.header.item.events.hover.backgroundColor,
@@ -360,11 +495,32 @@ export default function TextEditor() {
             }}
             className="hover:bg-[var(--hover-bg-color)]"
           >
-            <Item.icon style={style.header.item.elements[Item.code].item} />
+            <Save style={style.header.item.help.zoom.item} />
           </li>
-        ))}
-      </ul>
-      <div></div>
+          <li
+            style={{
+              ...style.header.item.style,
+              ...style.header.item.help.zoom.style,
+              ...(style.header.item.events?.hover?.backgroundColor && {
+                "--hover-bg-color":
+                  style.header.item.events.hover.backgroundColor,
+              }),
+            }}
+            className="hover:bg-[var(--hover-bg-color)]"
+          >
+            <Maximize style={style.header.item.help.zoom.item} />
+          </li>
+        </ul>
+      </div>
+      <div
+        ref={bodyRef}
+        style={style.body.style}
+        className="focus:outline-none"
+        contentEditable={true}
+        onMouseUp={checkSelection}
+        onKeyUp={checkSelection}
+        onInput={handleBody}
+      ></div>
       <div></div>
     </div>
   );
